@@ -1,5 +1,5 @@
 GCC=g++
-CXXFLAGS=-Wall -std=c++17 -o
+CXXFLAGS=-Wall -std=c++11 -o
 SERVER=server
 CLIENT=client
 MD5=md5

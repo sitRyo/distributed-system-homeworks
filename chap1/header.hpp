@@ -9,15 +9,10 @@ extern "C" {
   #include "md5.h"
 
   void MDFile(const char* filename, unsigned char digests[16]);
-  void MDString(char *string, unsigned char digest[16]);
+  void MDString(char *string, unsigned char digest[16], unsigned int len);
 }
 
 constexpr std::size_t packet_size_max = 1024;
-
-enum LINK_LAYER_TYPE {
-  TCP = 0,
-  UDP
-};
 
 typedef struct dip {
   int type;
@@ -41,6 +36,5 @@ typedef struct dudp {
 } DUDP;
 
 constexpr std::size_t dudp_size = sizeof(dudp);
-
 
 #endif

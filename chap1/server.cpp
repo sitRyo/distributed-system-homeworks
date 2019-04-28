@@ -55,30 +55,29 @@ bool Server::recvData() noexcept {
   printf("len -> %lu\n", len);
   if (len == -1) {
     perror("server recv");
-    std::abort();
+    return false;
   }
-
-  return reconstructDIP();
+  return reconstructDIP(len);
 }
 
-bool Server::reconstructDIP() const {
-  dip* dip_buf = (dip*)buf;
-  printf("--- dip layer ---\n");
+bool Server::reconstructDIP(std::size_t len) const {
+  dip* dip_buf = (dip*)(buf + (len - dip_size));
+  printf("--- dip layer ---\n\n");
   printf("ttl %d\n", dip_buf->ttl);
   printf("version %d\n", dip_buf->version);
   printf("type %d\n", dip_buf->type);
 
   printf("\n");
-  return reconstructLinkLayer(dip_size, dip_buf->type);
+  return reconstructLinkLayer(len - dip_size, dip_buf->type);
 }
 
 bool Server::reconstructLinkLayer(std::size_t cursor, int type) const {
   std::size_t data_len;
-  printf("--- link layer ---\n");
+  printf("--- link layer ---\n\n");
   switch(type) {
     case 1: { // TCP
-      dtcp *dtpc_buf = (dtcp*)(buf + cursor);
-
+      printf("%d\n", cursor + dtcp_size);
+      dtcp *dtpc_buf = (dtcp*)(buf + (cursor - dtcp_size));
       printf("md5 hash ");
       for (int i = 0; i < 16; ++i) {
         printf("%02x", dtpc_buf->t[i]);
@@ -87,7 +86,7 @@ bool Server::reconstructLinkLayer(std::size_t cursor, int type) const {
       
       unsigned char p[16];
       
-      MDString((buf + cursor + dtcp_size), p);
+      MDString(buf, p, cursor - dtcp_size);
       for (int i = 0; i < 16; ++i) {
         // printf("%02x", p[i]);
         if (p[i] != dtpc_buf->t[i]) {
@@ -96,12 +95,10 @@ bool Server::reconstructLinkLayer(std::size_t cursor, int type) const {
         }
       }
 
-      printf("\nok.\n");
+      printf("ok.\n");
       
       printf("type %d\n", dtpc_buf->type);
       printf("len %d\n", dtpc_buf->len);
-      
-      printf("\n");
       
       cursor += dtcp_size;
       data_len = dtpc_buf->len;
@@ -109,7 +106,7 @@ bool Server::reconstructLinkLayer(std::size_t cursor, int type) const {
     }
 
     case 0: { // UDP
-      dudp *dudp_buf = (dudp*)(buf + cursor);
+      dudp *dudp_buf = (dudp*)(buf - (cursor + dudp_size));
 
       printf("type UDP\n");
       printf("len %d\n", dudp_buf->len);
@@ -125,15 +122,15 @@ bool Server::reconstructLinkLayer(std::size_t cursor, int type) const {
     }
   }
 
-  return reconstructData(cursor, data_len);
+  return reconstructData(data_len);
 }
 
-bool Server::reconstructData(std::size_t cursor, std::size_t data_len) const {
-  char *data_buf = (buf + cursor);
+bool Server::reconstructData(std::size_t data_len) const {
+  char *data_buf = buf;
   
   printf("\n--- data layer ---\n");
 
-  for (int i = 0; i < 1024 - cursor; ++i) {
+  for (int i = 0; i < data_len; ++i) {
     if (i % 16 == 0) printf("\n");
     printf("%02x ", data_buf[i] & 0xff);
   }

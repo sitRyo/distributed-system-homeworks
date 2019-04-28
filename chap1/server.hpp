@@ -28,14 +28,18 @@ private:
   bool wait() noexcept;
   bool recvData() noexcept;
 
-  bool reconstructDIP() const;
+  bool reconstructDIP(std::size_t) const;
   bool reconstructLinkLayer(std::size_t, int) const;
-  bool reconstructData(std::size_t, std::size_t) const;
+  bool reconstructData(std::size_t) const;
 public:
   Server(): buf(new char[packet_size_max]) {};
   ~Server() { delete [] buf; }
-  // Server should be singleton I think ...
+  
   Server(const Server&) = delete;
+  Server& operator=(const Server&) = delete;
+
+  Server(Server&&) = delete;
+  Server& operator=(Server&&) = delete;
   
   bool run() noexcept;
 };

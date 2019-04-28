@@ -26,14 +26,15 @@ private:
   std::string file_name;
   std::size_t file_contents_len;
   std::size_t packet_size;
+  int protocol_type;
   // use raw pointer
   char* data;
   
   bool ConnectToServer() const noexcept;
  
-  bool addDIP();
-  bool addLinkLayer(int);
-  bool addData(int);
+  bool addDIP(std::size_t);
+  bool addLinkLayer();
+  bool addData();
   inline void printMD5(unsigned char const digests[16]) const;
 public:
   Connector() noexcept;
@@ -46,6 +47,7 @@ public:
 
   void setFilename(std::string&&) noexcept;
   void setContents(std::string&&) noexcept; // debug
+  bool checkPacketType(const char*);
 };
 
 #endif

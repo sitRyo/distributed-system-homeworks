@@ -47,7 +47,7 @@ bool Connector::fileOpen() {
 
 bool Connector::sendData() {
   printf("length of sending data: %lu\n", packet_size);
-  if (send(sock, (void*)data, 1024, 0) == -1) {
+  if (send(sock, (void*)data, packet_size, 0) == -1) {
     perror("connector send");
     return false;
   }
@@ -58,16 +58,16 @@ bool Connector::sendData() {
 bool Connector::constructPacket() {
   printf("start construct packet\n");
   this->packet_size = 0;
-  return addDIP();
+  return addData();
 }
 
-bool Connector::addDIP() {
-  printf("--- dip packet ---\n");
-
-  DIP* dip = (DIP*)data;
+bool Connector::addDIP(std::size_t link_len) {
+  printf("\n--- dip packet ---\n\n");
+  
+  DIP* dip = (DIP*)(data + (this->file_contents_len + link_len));
   dip->ttl = 10;
   dip->version = 1;
-  dip->type = 1;
+  dip->type = this->protocol_type;
 
   printf("ttl %d\n", dip->ttl);
   printf("version %d\n", dip->version);
@@ -75,35 +75,33 @@ bool Connector::addDIP() {
 
   this->packet_size += dip_size;
 
-  return addLinkLayer(dip->type);
+  return sendData();
 }
 
-bool Connector::addLinkLayer(int type) {
-  printf("\n--- Link Layer ---\n");
-  void* buf = &((DIP*)data)[1];
-  switch (type) {
+bool Connector::addLinkLayer() {
+  printf("\n--- Link Layer ---\n\n");
+  void* buf = data + this->file_contents_len;
+  switch (this->protocol_type) {
     case 1: {
       DTCP* tcp_buf = (DTCP*)buf;
       MDFile(file_name.c_str(), tcp_buf->t);
-      fileOpen();
       printMD5(tcp_buf->t);
-      // for (int i = 0; i < )
+      
       tcp_buf->type = 111;
       tcp_buf->len = this->file_contents_len;
       printf("type %d\n", tcp_buf->type);
       printf("len %d\n", tcp_buf->len);
 
       this->packet_size += dtcp_size;
-      break;
+      return addDIP(dtcp_size);
     }
 
     case 0: {
-      fileOpen();
       DUDP* udp_buf = (DUDP*)buf;
       udp_buf->type = 111;
       udp_buf->len = this->file_contents_len;
       this->packet_size += dudp_size;
-      break;
+      return addDIP(dudp_size);
     }
 
     default: {
@@ -111,33 +109,22 @@ bool Connector::addLinkLayer(int type) {
       return false;
     }
   }
-
-  return addData(type);
 }
 
-bool Connector::addData(int type) {
+bool Connector::addData() {
   printf("\n--- data layer ---\n");
-  std::size_t beg;
-  switch (type) {
-    case 1: { // TCP
-      beg = dip_size + dtcp_size;
-      break;
-    }
-    case 0: { // UDP
-      beg = dip_size + dudp_size;
-      break;
-    }
-  }
-  this->packet_size += file_contents_len;
+  fileOpen();
+  this->file_contents_len = file_contents.size();
+  packet_size += this->file_contents_len;
   
-  memcpy((data + beg), file_contents.c_str(), file_contents_len);
+  memcpy(data, file_contents.c_str(), file_contents_len);
 
-  for (int i = 0; i < 1024 - beg; ++i) {
+  for (int i = 0; i < file_contents_len; ++i) {
     if (i % 16 == 0) printf("\n");
-    printf("%02x ", data[i + beg] & 0xff);
+    printf("%02x ", data[i] & 0xff);
   }
   printf("\n");
-  return sendData();
+  return addLinkLayer();
 }
 
 void Connector::setContents(std::string&& contents) noexcept {
@@ -146,6 +133,23 @@ void Connector::setContents(std::string&& contents) noexcept {
 
 void Connector::setFilename(std::string&& name) noexcept {
   this->file_name = std::move(name);
+}
+
+bool Connector::checkPacketType(const char *user_input_protocol_type) {
+  if (!strcmp("TCP", user_input_protocol_type)) {
+    this->protocol_type = 1;
+    printf("protocol type -> TCP\n");
+    return true;
+  } else
+
+  if (!strcmp("UDP", user_input_protocol_type)) {
+    this->protocol_type = 0;
+    printf("protocol type -> UDP\n");
+    return true;
+  }
+
+  printf("unenable protocol type\n");
+  return false;
 }
 
 inline void Connector::printMD5(unsigned char const digests[16]) const {
@@ -161,20 +165,27 @@ int main(int argc, char *argv[]) {
   // printf("%d\n", argc);
   if (argc != 3) {
     fprintf(stderr, "needs 2 params, packet type, file name\n");
-    std::abort();
+    exit(1);
   } 
   
   Connector con;
   std::string name(argv[2]);
   con.setFilename(std::move(name));
+  if (!con.checkPacketType(argv[1])) {
+    fprintf(stderr, "please select TCP or UDP (please input uppercase latter)\n");
+    con.~Connector();
+    exit(1);
+  }
 
   if (!con.initConnector()) {
     fprintf(stderr, "failiar to connect server\n");
-    std::abort();
+    con.~Connector();
+    exit(1);
   }
   
 #if _DEBUG_
   if (!con.constructPacket()) {
+    con.~Connector();
     exit(1);
   }
 #else
