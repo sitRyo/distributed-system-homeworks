@@ -1,0 +1,12 @@
+実行方法
+Q2.1 
+$ gcc capthread.c -o capthread
+$ ./capthread
+
+Q2,2
+$ gcc capfork.c -o capfork
+$ ./capfork
+
+Q2.3
+$ gcc capfork2.c -o capfork2
+$ ./capfork2

@@ -1,0 +1,18 @@
+GCC=g++
+CXXFLAGS=-Wall -std=c++11 -o
+SERVER=server
+CLIENT=client
+MD5=md5
+SERVER_SOURCE=server.cpp
+CLIENT_SOURCE=client.cpp
+MD5_TEST=md5test.cpp
+MD5_LINK=-L./ -lmd5c
+
+$(SERVER): $(SERVER_SOURCE)
+	$(GCC) $(CXXFLAGS) $(SERVER) $(SERVER_SOURCE) $(MD5_LINK)
+
+$(CLIENT): $(CLIENT_SOURCE)
+	$(GCC) $(CXXFLAGS) $(CLIENT) $(CLIENT_SOURCE) $(MD5_LINK)
+
+$(MD5): $(MD5_TEST)
+	$(GCC) $(CXXFLAGS) $(MD5) $(MD5_TEST) $(MD5_LINK)
