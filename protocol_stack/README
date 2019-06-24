@@ -1,7 +1,0 @@
-コンパイル
-1, make client
-2, make server
-
-実行
-1, ./server
-2, ./client <TCP or UDP> <ファイル名>
