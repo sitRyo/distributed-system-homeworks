@@ -6,6 +6,7 @@ MiddleWare::MiddleWare() noexcept {
   _start = std::chrono::system_clock::now();
   _elapsed = 0.0;
   _sender.reset(new Sender(this));
+  _receiver.reset(new Receiver(this));
   _senderHasSockets = 0;
 };
 
@@ -51,13 +52,19 @@ bool MiddleWare::terminate(const std::string&& opponent) {
     fprintf(stderr, "socket was terminated\n");
     return false;
   }
+  _senderHasSockets -= 1;
   _nameToSocketIndex[opponent] = 0;
   fprintf(stderr, "terminate socket is success!");
   return true;
 }
 
-void MiddleWare::notify(const short flag) {
+void MiddleWare::notify(char *buf = nullptr) {
   std::lock_guard<std::mutex> lock(_mtx);
   // needs Logger
+  const short flag = *(short*)buf;
   _logger.showMessage(flag, _elapsed);
+  if (buf != nullptr) {
+    // assert(buf != nullptr)
+    _logger.showData(buf);
+  }
 }

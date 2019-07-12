@@ -17,6 +17,7 @@ public:
 /* :destructors */
   ~Logger() = default;
   void showMessage(const short flag, const double time) const noexcept;
+  void showData(char *buf) const noexcept;
 };
 
 #endif // _INC_LOGGER_  1

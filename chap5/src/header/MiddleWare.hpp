@@ -2,6 +2,7 @@
 #define _INC_MIDDLEWARE_ 1
 
 #include "Sender.hpp"
+#include "Receiver.hpp"
 #include "Util.h"
 #include "Task.hpp"
 #include "Logger.hpp"
@@ -14,12 +15,14 @@
 #include <thread>
 
 class Sender;
+class Receiver;
 
 class MiddleWare {
 private:
 /* :members */
   Logger _logger;
   std::mutex _mtx;
+  std::unique_ptr<Receiver> _receiver;
   std::unique_ptr<Sender> _sender;
   std::chrono::system_clock::time_point  _start;
   double _elapsed;
@@ -35,7 +38,7 @@ public:
   void showSocketTable() const;
   bool sendData(const std::string&& opponent, Task& task); // 今回は妥協
   bool terminate(const std::string&& opponent);
-  void notify(const short flag); // observer
+  void notify(char *buf); // observer
 };
 
 #endif // _INC_MIDDLEWARE_ 
