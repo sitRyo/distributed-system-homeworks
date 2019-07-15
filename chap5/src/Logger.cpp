@@ -16,9 +16,9 @@ void Logger::registerMessage() noexcept {
   _logMessageTable[util::FUNCTION_EXECTION_FLAG] = std::string("Exection: ");
 }
 
-void Logger::showMessage(const short flag, const double time) const noexcept {
+void Logger::showMessage(const short flag, const double time, const int taskName) const noexcept {
   for (auto&& itr : _logMessageTable) {
-    if (flag | itr.first) cout << itr.second << " " << time << endl;
+    if (flag & itr.first) cout << itr.second << " " << taskName << " " << time << endl;
   }
 }
 

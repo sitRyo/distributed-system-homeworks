@@ -16,7 +16,7 @@ public:
   Logger() noexcept;
 /* :destructors */
   ~Logger() = default;
-  void showMessage(const short flag, const double time) const noexcept;
+  void showMessage(const short flag, const double time, const int taskName) const noexcept;
   void showData(char *buf) const noexcept;
 };
 

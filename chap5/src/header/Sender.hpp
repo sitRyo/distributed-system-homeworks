@@ -30,7 +30,7 @@ public:
   int AddNewClient(const std::string&& ipaddr, const int port) noexcept;
   int initConnector(const std::string&& ipaddr, const int port) noexcept;
   int ConnectToServer() noexcept;
-  bool sendData(const int socketIndex, const short packetFlags, const double time, const ::size_t size, void* data) noexcept;
+  int sendData(const int socketIndex, const short packetFlags, const double time, const ::size_t size, void* data) noexcept;
   void constructPacket(const short packetFlags, const double time, const ::size_t size, char* buf, void* data) noexcept;
   bool terminate(const int socketIndex);
   bool terminateSocket(const int socketIndex);

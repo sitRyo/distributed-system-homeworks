@@ -24,7 +24,9 @@ namespace util {
 
   constexpr short FLAG_SIZE = 2; // byte
   constexpr short TIME_SIZE = 8; // byte
+  constexpr int UNIQUE_NUMBER_SIZE = 4; // byte
 
+  constexpr int CLIENT_NUMBER = 2; // size;
 }
 
 

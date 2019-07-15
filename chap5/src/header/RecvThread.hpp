@@ -12,14 +12,21 @@
 #include "MiddleWare.hpp"
 #include "Util.hpp"
 
+#include <memory>
+
+class MiddleWare;
+
 class RecvThread {
 /* : members */
-  MiddleWare *_delegator;
+  MiddleWare *const _delegator;
   util::Socket *_socket;
   std::unique_ptr<char[]> buf;
+  int _threadNumber;
 public:
 /* :constructors */
-  RecvThread(MiddleWare *middleWare, util::Socket *sock) noexcept;
+  RecvThread(MiddleWare *const middleWare, util::Socket *sock, const int number) noexcept;
+  RecvThread(RecvThread&& recvThread);
+  void run() noexcept;
   bool recvData() noexcept;
   void notify() const noexcept;
 };
